@@ -4,7 +4,7 @@ import { NavLink, Link } from 'react-router-dom';
 const NavBar = ({ user }) =>{
     return (
             <nav className="navbar navbar-expand-lg navbar-light bg-light">
-            <Link className="navbar-brand" to="/">Fake Movie Listing</Link>
+            <Link className="navbar-brand" to="/">Fake Movie Listings</Link>
             <button
                 className="navbar-toggler"
                 type="button"

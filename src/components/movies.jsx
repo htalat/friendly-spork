@@ -15,7 +15,7 @@ export default class movies extends Component {
     state = {
         movies: [],
         genres: [],
-        pageSize: 4,
+        pageSize: 10,
         currentPage: 1,
         searchQuery: "",
         selectedGenre: null,
@@ -23,22 +23,20 @@ export default class movies extends Component {
     }
 
     async componentDidMount() {
-        const { data } = await getGenres();
-        const genres = [ {name: 'All Genres', _id: -1}, ...data];
+        const { data: genres } = await getGenres();
 
         const { data: movies } = await getMovies();
-
-        this.setState({movies, genres })
+        this.setState({ movies, genres })
     }
 
     handleDelete = async (movie) => {
         const originalMovies = this.state.movies;
         let { movies } = this.state;
-        movies = movies.filter(m => m._id !== movie._id);
+        movies = movies.filter(m => m.id !== movie.id);
         this.setState({ movies });
 
         try{
-            await deleteMovie(movie._id);
+            await deleteMovie(movie.id);
         }catch(ex){
             if(ex.response && ex.response.status === 404)
                 toast.error('This movie has already been deleted');
@@ -56,7 +54,6 @@ export default class movies extends Component {
     }
 
     handleSort = sortColumn =>{
-
         this.setState({ sortColumn });
     }
 
@@ -83,12 +80,18 @@ export default class movies extends Component {
             movies: allMovies
         } = this.state;
 
-        let filteredMovies = selectedGenre && selectedGenre._id !== -1 ? allMovies.filter(m => m.genre._id === selectedGenre._id) : allMovies;
+        function filterMovieByGenre(movies, genre){
+            return movies.filter(m => {
+                return m.category.filter(c => c.id === genre.id);
+            })
+        }
+
+        let filteredMovies = selectedGenre && selectedGenre.id !== -1 ? filterMovieByGenre(allMovies, selectedGenre) : allMovies;
 
         if(searchQuery)
             filteredMovies = allMovies.filter(m => m.title.toLowerCase().startsWith(searchQuery.toLowerCase()));
-        else if(selectedGenre && selectedGenre._id)
-            filteredMovies = allMovies.filter(m => m.genre._id === selectedGenre._id);
+        else if(selectedGenre && selectedGenre.id)
+            filteredMovies = filterMovieByGenre(allMovies, selectedGenre);
 
         const sorted = _.orderBy(filteredMovies, [sortColumn.path], [sortColumn.order]);
 
@@ -125,7 +128,7 @@ export default class movies extends Component {
                     />
                 </div>
                 <div className="col">
-                    {user && (
+                    { (
                         <Link
                             to="/movies/new"
                             className="btn btn-primary"
@@ -134,7 +137,7 @@ export default class movies extends Component {
                             New Movie
                         </Link>
                     )}
-                    <p>Showing {totalCount} movies in the database.</p>
+                    <p>Showing {totalCount} recipes in the database.</p>
                     <SearchBox value={searchQuery} change={this.handleSearch} />
                     <MoviesTable
                         movies={movies}
